@@ -6,6 +6,7 @@ from app.models import AnalysisTask
 from app.database import get_db
 from app.celery import analyze_pull_request
 from app.core.logging_config import logger
+from typing import Optional
 
 import re
 
@@ -20,7 +21,9 @@ app.add_middleware(
 )
 
 class AnalyzePRRequest(BaseModel):
-    pr_url: str
+    repo_url: str
+    pr_number: int
+    github_token: Optional[str] = None
 
 @app.post("/analyze-pr")
 async def analyze_pr(request: AnalyzePRRequest, db: Session = Depends(get_db)):
