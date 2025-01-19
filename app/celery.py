@@ -7,6 +7,7 @@ import json
 from app.core.config import settings
 from app.core.logging_config import logger
 import traceback
+from typing import Optional
 
 import re
 
@@ -22,7 +23,7 @@ celery_app = Celery("tasks", broker=redis_url, backend=redis_url, broker_transpo
 
 import requests
 
-def get_pr_details(repo: str, pr_number: int, owner:str):
+def get_pr_details(repo: str, pr_number: int, owner:str, github_token: Optional[str] = None):
     """
     Fetch the details of a GitHub Pull Request, including file changes, status, and patches.
 
@@ -39,10 +40,16 @@ def get_pr_details(repo: str, pr_number: int, owner:str):
     api_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/files"
 
     # Headers for the API request
-    headers = {
-        "Authorization": f"token {settings.GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json",
-    }
+    if github_token:
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+    else:
+        headers = {
+            "Accept": "application/vnd.github.v3+json",
+        }
+
 
     # Make the API request
     response = requests.get(api_url, headers=headers)
@@ -55,7 +62,7 @@ def get_pr_details(repo: str, pr_number: int, owner:str):
     return files
 
 @celery_app.task
-def analyze_pull_request(repo: str, pr_number: int, owner:str, task_id: int):
+def analyze_pull_request(repo: str, pr_number: int, owner:str, task_id: int, github_token: Optional[str] = None):
     """
     Simulate analysis of a GitHub PR with database updates.
     """
@@ -67,7 +74,7 @@ def analyze_pull_request(repo: str, pr_number: int, owner:str, task_id: int):
     
     try:
         logger.info("Fetching PR details...")
-        diff = get_pr_details(repo, pr_number, owner)
+        diff = get_pr_details(repo, pr_number, owner,github_token)
 
         logger.info("Generating review of the Pull Request")
         review = generate_pr_review(diff)

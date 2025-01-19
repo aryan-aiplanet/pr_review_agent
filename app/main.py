@@ -27,19 +27,20 @@ class AnalyzePRRequest(BaseModel):
 
 @app.post("/analyze-pr")
 async def analyze_pr(request: AnalyzePRRequest, db: Session = Depends(get_db)):
-    pattern = r"github\.com/([^/]+)/([^/]+)/pull/(\d+)"
-    match = re.search(pattern, request.pr_url)
+    pattern = r"github\.com/([^/]+)/([^/]+)"
+    match = re.search(pattern, request.repo_url)
 
     if not match:
         raise ValueError("Invalid GitHub PR URL format")
 
-    owner, repo, pr_number = match.groups()
+    owner, repo = match.groups()
+    pr_number = request.pr_number
 
     db_task = AnalysisTask(repo=repo, pr_number=pr_number, status="PENDING")
     db.add(db_task)
     db.commit()
     logger.info(f"Analysis task created for PR: {pr_number}")
-    analyze_pull_request.delay(repo, pr_number, owner, db_task.id)
+    analyze_pull_request.delay(repo, pr_number, owner, db_task.id, request.github_token)
     return {"task_id": db_task.id, "message": "Analysis started"}
 
 @app.get("/status/{task_id}")

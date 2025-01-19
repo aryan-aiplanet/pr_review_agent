@@ -8,7 +8,6 @@ import json
 class Settings(BaseSettings):
     DATABASE_URL: str
     OPENAI_API_KEY: str
-    GITHUB_TOKEN: str
     REDIS_URL: str
 
     class Config:
