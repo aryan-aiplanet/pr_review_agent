@@ -1,0 +1,7 @@
+venv
+app/__pycache__
+app/core/__pycache__
+alembic/__pycache__
+alembic/versions/__pycache__
+get_diff_test.py
+.env
