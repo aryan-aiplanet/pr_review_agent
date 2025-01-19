@@ -16,4 +16,4 @@ COPY . /app
 ENV PYTHONPATH=/app
 
 # Expose the web server port
-EXPOSE 8000
+EXPOSE 8081
